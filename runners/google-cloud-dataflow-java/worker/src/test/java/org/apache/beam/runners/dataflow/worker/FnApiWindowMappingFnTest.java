@@ -117,9 +117,7 @@ public class FnApiWindowMappingFnTest {
 
     @Override
     public <T> InboundDataClient receive(
-        LogicalEndpoint inputLocation,
-        Coder<WindowedValue<T>> coder,
-        FnDataReceiver<WindowedValue<T>> consumer) {
+        LogicalEndpoint inputLocation, Coder<T> coder, FnDataReceiver<T> consumer) {
       this.inboundReceiver = (FnDataReceiver) consumer;
       this.inboundDataClient = CompletableFutureInboundDataClient.create();
       return inboundDataClient;
