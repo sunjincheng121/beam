@@ -124,13 +124,14 @@ public class FnApiWindowMappingFnTest {
     }
 
     @Override
-    public <T> CloseableFnDataReceiver<WindowedValue<T>> send(
-        LogicalEndpoint outputLocation, Coder<WindowedValue<T>> coder) {
-      return new CloseableFnDataReceiver<WindowedValue<T>>() {
+    public <T> CloseableFnDataReceiver<T> send(
+        LogicalEndpoint outputLocation, Coder<T> coder) {
+      return new CloseableFnDataReceiver<T>() {
         @Override
-        public void accept(WindowedValue<T> windowedValue) throws Exception {
+        public void accept(T value) throws Exception {
+          WindowedValue<KV<Object, Object>> windowedValue = (WindowedValue<KV<Object, Object>>) value;
           inputValues.add(windowedValue);
-          KV<Object, Object> kv = (KV) windowedValue.getValue();
+          KV<Object, Object> kv = windowedValue.getValue();
           inboundReceiver.accept(windowedValue.withValue(KV.of(kv.getKey(), outputValue)));
           inboundDataClient.complete();
         }
