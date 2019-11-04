@@ -1185,7 +1185,8 @@ class ValueOnlyWindowedValueCoder(FastCoder):
 
 
 Coder.register_structured_urn(
-    common_urns.coders.VALUE_ONLY_WINDOWED_VALUE.urn, ValueOnlyWindowedValueCoder)
+    common_urns.coders.VALUE_ONLY_WINDOWED_VALUE.urn,
+    ValueOnlyWindowedValueCoder)
 
 
 class LengthPrefixCoder(FastCoder):
