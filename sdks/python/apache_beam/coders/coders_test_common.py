@@ -377,6 +377,34 @@ class CodersTest(unittest.TestCase):
         (windowed_value.WindowedValue(1.5, 0, ()),
          windowed_value.WindowedValue("abc", 10, ('window',))))
 
+  def test_value_only_windowed_value_coder(self):
+    coder = coders.ValueOnlyWindowedValueCoder(coders.VarIntCoder())
+    # Verify cloud object representation
+    self.assertEqual(
+        {
+            '@type': 'kind:value_only_windowed_value',
+            'is_wrapper': True,
+            'component_encodings': [coders.VarIntCoder().as_cloud_object()],
+        },
+        coder.as_cloud_object())
+    # Test binary representation
+    self.assertEqual(b'\x01',
+                     coder.encode(window.GlobalWindows.windowed_value(1)))
+
+    # Test unnested
+    self.check_coder(
+        coders.ValueOnlyWindowedValueCoder(coders.VarIntCoder()),
+        window.GlobalWindows.windowed_value(3),
+        window.GlobalWindows.windowed_value(-1))
+
+    # Test nested
+    self.check_coder(
+        coders.TupleCoder((
+            coders.ValueOnlyWindowedValueCoder(coders.FloatCoder()),
+            coders.ValueOnlyWindowedValueCoder(coders.StrUtf8Coder()))),
+        (window.GlobalWindows.windowed_value(1.5),
+         window.GlobalWindows.windowed_value("abc")))
+
   def test_proto_coder(self):
     # For instructions on how these test proto message were generated,
     # see coders_test.py

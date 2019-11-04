@@ -263,6 +263,13 @@ examples:
 ---
 
 coder:
+  urn: "beam:coder:value_only_windowed_value:v1"
+  components: [{urn: "beam:coder:varint:v1"}]
+examples:
+  "\u0002": {value: 2}
+
+---
+coder:
   urn: "beam:coder:double:v1"
 examples:
   "\0\0\0\0\0\0\0\0": "0"

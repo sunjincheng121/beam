@@ -1088,6 +1088,44 @@ class WindowedValueCoderImpl(StreamCoderImpl):
     return estimated_size, observables
 
 
+class ValueOnlyWindowedValueCoderImpl(StreamCoderImpl):
+  """For internal use only; no backwards-compatibility guarantees.
+
+  A coder for windowed values that drops timestamp and windows for encoding,
+  and uses defaults timestamp, and windows for decoding.."""
+
+  def __init__(self, value_coder):
+    self._value_coder = value_coder
+
+  def encode_to_stream(self, value, out, nested):
+    wv = value  # type cast
+    self._value_coder.encode_to_stream(wv.value, out, nested)
+
+  def decode_from_stream(self, in_stream, nested):
+    value = self._value_coder.decode_from_stream(in_stream, nested)
+    from apache_beam.transforms.window import GlobalWindow
+    return windowed_value.create(
+        value,
+        # Avoid creation of Timestamp object.
+        MIN_TIMESTAMP.micros,
+        (GlobalWindow(),))
+
+  def get_estimated_size_and_observables(self, value, nested=False):
+    """Returns estimated size of value along with any nested observables."""
+    if isinstance(value, observable.ObservableMixin):
+      # Should never be here.
+      # TODO(robertwb): Remove when coders are set correctly.
+      return 0, [(value, self._value_coder)]
+    estimated_size = 0
+    observables = []
+    value_estimated_size, value_observables = (
+        self._value_coder.get_estimated_size_and_observables(
+            value.value, nested=nested))
+    estimated_size += value_estimated_size
+    observables += value_observables
+    return estimated_size, observables
+
+
 class LengthPrefixCoderImpl(StreamCoderImpl):
   """For internal use only; no backwards-compatibility guarantees.
 

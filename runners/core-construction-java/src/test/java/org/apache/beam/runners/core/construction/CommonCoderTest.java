@@ -99,6 +99,9 @@ public class CommonCoderTest {
           .put(
               getUrn(StandardCoders.Enum.WINDOWED_VALUE),
               WindowedValue.FullWindowedValueCoder.class)
+          .put(
+              getUrn(StandardCoders.Enum.VALUE_ONLY_WINDOWED_VALUE),
+              WindowedValue.ValueOnlyWindowedValueCoder.class)
           .build();
 
   @AutoValue
@@ -280,6 +283,12 @@ public class CommonCoderTest {
               (int) paneInfoMap.get("index"),
               (int) paneInfoMap.get("on_time_index"));
       return WindowedValue.of(windowValue, timestamp, windows, paneInfo);
+    } else if (s.equals(getUrn(StandardCoders.Enum.VALUE_ONLY_WINDOWED_VALUE))) {
+      Map<String, Object> kvMap = (Map<String, Object>) value;
+      Coder valueCoder = ((WindowedValue.ValueOnlyWindowedValueCoder) coder).getValueCoder();
+      Object windowValue =
+          convertValue(kvMap.get("value"), coderSpec.getComponents().get(0), valueCoder);
+      return WindowedValue.valueInGlobalWindow(windowValue);
     } else if (s.equals(getUrn(StandardCoders.Enum.DOUBLE))) {
       return Double.parseDouble((String) value);
     } else {
@@ -314,6 +323,8 @@ public class CommonCoderTest {
     } else if (s.equals(getUrn(StandardCoders.Enum.WINDOWED_VALUE))) {
       return WindowedValue.FullWindowedValueCoder.of(
           components.get(0), (Coder<BoundedWindow>) components.get(1));
+    } else if (s.equals(getUrn(StandardCoders.Enum.VALUE_ONLY_WINDOWED_VALUE))) {
+      return WindowedValue.ValueOnlyWindowedValueCoder.of(components.get(0));
     } else if (s.equals(getUrn(StandardCoders.Enum.DOUBLE))) {
       return DoubleCoder.of();
     } else {
@@ -376,6 +387,9 @@ public class CommonCoderTest {
       assertEquals(expectedValue, actualValue);
 
     } else if (s.equals(getUrn(StandardCoders.Enum.WINDOWED_VALUE))) {
+      assertEquals(expectedValue, actualValue);
+
+    } else if (s.equals(getUrn(StandardCoders.Enum.VALUE_ONLY_WINDOWED_VALUE))) {
       assertEquals(expectedValue, actualValue);
 
     } else if (s.equals(getUrn(StandardCoders.Enum.DOUBLE))) {

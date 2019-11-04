@@ -85,6 +85,9 @@ class StandardCodersTest(unittest.TestCase):
           lambda x, value_parser, window_parser: windowed_value.create(
               value_parser(x['value']), x['timestamp'] * 1000,
               tuple([window_parser(w) for w in x['windows']])),
+      'beam:coder:value_only_windowed_value:v1':
+          lambda x, value_parser: window.GlobalWindow.windowed_value(
+              value_parser(x['value'])),
       'beam:coder:timer:v1':
           lambda x, payload_parser: dict(
               payload=payload_parser(x['payload']),

@@ -211,5 +211,18 @@ cdef class WindowedValueCoderImpl(StreamCoderImpl):
   cpdef encode_to_stream(self, value, OutputStream stream, bint nested)
 
 
+cdef class ValueOnlyWindowedValueCoderImpl(StreamCoderImpl):
+  """A coder for value only windowed values."""
+  cdef CoderImpl _value_coder
+
+  @cython.locals(c=CoderImpl)
+  cpdef get_estimated_size_and_observables(self, value, bint nested=?)
+
+  cpdef decode_from_stream(self, InputStream stream, bint nested)
+
+  @cython.locals(wv=windowed_value.WindowedValue)
+  cpdef encode_to_stream(self, value, OutputStream stream, bint nested)
+
+
 cdef class LengthPrefixCoderImpl(StreamCoderImpl):
   cdef CoderImpl _value_coder

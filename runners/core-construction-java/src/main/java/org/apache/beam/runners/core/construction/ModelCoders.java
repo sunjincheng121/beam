@@ -53,6 +53,8 @@ public class ModelCoders {
       getUrn(StandardCoders.Enum.INTERVAL_WINDOW);
 
   public static final String WINDOWED_VALUE_CODER_URN = getUrn(StandardCoders.Enum.WINDOWED_VALUE);
+  public static final String VALUE_ONLY_WINDOWED_VALUE_CODER_URN =
+      getUrn(StandardCoders.Enum.VALUE_ONLY_WINDOWED_VALUE);
 
   private static final Set<String> MODEL_CODER_URNS =
       ImmutableSet.of(
@@ -67,6 +69,7 @@ public class ModelCoders {
           GLOBAL_WINDOW_CODER_URN,
           INTERVAL_WINDOW_CODER_URN,
           WINDOWED_VALUE_CODER_URN,
+          VALUE_ONLY_WINDOWED_VALUE_CODER_URN,
           DOUBLE_CODER_URN);
 
   public static Set<String> urns() {
@@ -84,6 +87,13 @@ public class ModelCoders {
         .setSpec(FunctionSpec.newBuilder().setUrn(WINDOWED_VALUE_CODER_URN))
         .addComponentCoderIds(elementCoderId)
         .addComponentCoderIds(windowCoderId)
+        .build();
+  }
+
+  public static Coder valueOnlyWindowedValueCoder(String elementCoderId, String windowCoderId) {
+    return Coder.newBuilder()
+        .setSpec(FunctionSpec.newBuilder().setUrn(VALUE_ONLY_WINDOWED_VALUE_CODER_URN))
+        .addComponentCoderIds(elementCoderId)
         .build();
   }
 

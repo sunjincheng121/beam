@@ -17,9 +17,11 @@
  */
 package org.apache.beam.runners.fnexecution.wire;
 
+import static org.apache.beam.runners.core.construction.BeamUrns.getUrn;
 import static org.apache.beam.vendor.guava.v26_0_jre.com.google.common.base.Preconditions.checkArgument;
 
 import java.io.IOException;
+import java.util.Map;
 import org.apache.beam.model.pipeline.v1.RunnerApi;
 import org.apache.beam.runners.core.construction.ModelCoders;
 import org.apache.beam.runners.core.construction.RehydratedComponents;
@@ -27,7 +29,6 @@ import org.apache.beam.runners.core.construction.SyntheticComponents;
 import org.apache.beam.runners.core.construction.graph.PipelineNode.PCollectionNode;
 import org.apache.beam.sdk.coders.Coder;
 import org.apache.beam.sdk.util.WindowedValue;
-import org.apache.beam.sdk.util.WindowedValue.FullWindowedValueCoder;
 
 /** Helpers to construct coders for gRPC port reads and writes. */
 public class WireCoders {
@@ -72,10 +73,10 @@ public class WireCoders {
     String protoCoderId = addRunnerWireCoder(pCollectionNode, builder);
     Coder<?> javaCoder = RehydratedComponents.forComponents(builder.build()).getCoder(protoCoderId);
     checkArgument(
-        javaCoder instanceof WindowedValue.FullWindowedValueCoder,
+        javaCoder instanceof WindowedValue.WindowedValueCoder,
         "Unexpected Deserialized %s type, expected %s, got %s",
         RunnerApi.Coder.class.getSimpleName(),
-        FullWindowedValueCoder.class.getSimpleName(),
+        WindowedValue.WindowedValueCoder.class.getSimpleName(),
         javaCoder.getClass());
     return (Coder<WindowedValue<T>>) javaCoder;
   }
@@ -88,8 +89,29 @@ public class WireCoders {
     String windowingStrategyId = pCollectionNode.getPCollection().getWindowingStrategyId();
     String windowCoderId =
         components.getWindowingStrategiesOrThrow(windowingStrategyId).getWindowCoderId();
+
+    Map<String, String> configurations = components.getConfigurationsMap();
+
+    // check whether the configured wire coder is WindowedValueCoder(full or value only).
+    String wireCoderName = getUrn(RunnerApi.ConfigKeys.Enum.WIRE_CODER);
+    String windowedValueCoderName = getUrn(RunnerApi.StandardCoders.Enum.WINDOWED_VALUE);
+    String valueOnlyWindowedValueCoderName =
+        getUrn(RunnerApi.StandardCoders.Enum.VALUE_ONLY_WINDOWED_VALUE);
+    String inputWireCoder = configurations.getOrDefault(wireCoderName, windowedValueCoderName);
+    checkArgument(
+        inputWireCoder.equals(windowedValueCoderName)
+            || inputWireCoder.equals(valueOnlyWindowedValueCoderName),
+        "Unexpected wire coder name %s, currently only %s or %s are supported!",
+        inputWireCoder,
+        windowedValueCoderName,
+        valueOnlyWindowedValueCoderName);
+
+    Boolean useValueOnlyWindowedValueCoder = inputWireCoder.equals(valueOnlyWindowedValueCoderName);
     RunnerApi.Coder windowedValueCoder =
-        ModelCoders.windowedValueCoder(elementCoderId, windowCoderId);
+        useValueOnlyWindowedValueCoder
+            ? ModelCoders.valueOnlyWindowedValueCoder(elementCoderId, windowCoderId)
+            : ModelCoders.windowedValueCoder(elementCoderId, windowCoderId);
+
     // Add the original WindowedValue<T, W> coder to the components;
     String windowedValueId =
         SyntheticComponents.uniqueId(

@@ -118,6 +118,22 @@ class CoderTranslators {
     };
   }
 
+  static CoderTranslator<WindowedValue.ValueOnlyWindowedValueCoder<?>> valueOnlyWindowedValue() {
+    return new SimpleStructuredCoderTranslator<WindowedValue.ValueOnlyWindowedValueCoder<?>>() {
+      @Override
+      public List<? extends Coder<?>> getComponents(
+          WindowedValue.ValueOnlyWindowedValueCoder<?> from) {
+        return ImmutableList.of(from.getValueCoder());
+      }
+
+      @Override
+      public WindowedValue.ValueOnlyWindowedValueCoder<?> fromComponents(
+          List<Coder<?>> components) {
+        return WindowedValue.getValueOnlyCoder(components.get(0));
+      }
+    };
+  }
+
   public abstract static class SimpleStructuredCoderTranslator<T extends Coder<?>>
       implements CoderTranslator<T> {
     @Override

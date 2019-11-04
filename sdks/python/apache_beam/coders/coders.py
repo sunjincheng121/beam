@@ -64,7 +64,7 @@ __all__ = [
     'FastPrimitivesCoder', 'FloatCoder', 'IterableCoder', 'PickleCoder',
     'ProtoCoder', 'SingletonCoder', 'StrUtf8Coder', 'TimestampCoder',
     'TupleCoder', 'TupleSequenceCoder', 'VarIntCoder',
-    'WindowedValueCoder'
+    'WindowedValueCoder', 'ValueOnlyWindowedValueCoder'
 ]
 
 
@@ -1134,6 +1134,58 @@ class WindowedValueCoder(FastCoder):
 
 Coder.register_structured_urn(
     common_urns.coders.WINDOWED_VALUE.urn, WindowedValueCoder)
+
+
+class ValueOnlyWindowedValueCoder(FastCoder):
+  """Coder for value only windowed values."""
+
+  def __init__(self, wrapped_value_coder):
+    self.wrapped_value_coder = wrapped_value_coder
+
+  def _create_impl(self):
+    return coder_impl.ValueOnlyWindowedValueCoderImpl(
+        self.wrapped_value_coder.get_impl())
+
+  def is_deterministic(self):
+    return all(c.is_deterministic() for c in [self.wrapped_value_coder])
+
+  def as_cloud_object(self, coders_context=None):
+    return {
+        '@type':
+            'kind:value_only_windowed_value',
+        'is_wrapper':
+            True,
+        'component_encodings': [
+            component.as_cloud_object(coders_context)
+            for component in self._get_component_coders()
+        ],
+    }
+
+  def _get_component_coders(self):
+    return [self.wrapped_value_coder]
+
+  def is_kv_coder(self):
+    return self.wrapped_value_coder.is_kv_coder()
+
+  def key_coder(self):
+    return self.wrapped_value_coder.key_coder()
+
+  def value_coder(self):
+    return self.wrapped_value_coder.value_coder()
+
+  def __repr__(self):
+    return 'ValueOnlyWindowedValueCoder[%s]' % self.wrapped_value_coder
+
+  def __eq__(self, other):
+    return (type(self) == type(other)
+            and self.wrapped_value_coder == other.wrapped_value_coder)
+
+  def __hash__(self):
+    return hash(self.wrapped_value_coder)
+
+
+Coder.register_structured_urn(
+    common_urns.coders.VALUE_ONLY_WINDOWED_VALUE.urn, ValueOnlyWindowedValueCoder)
 
 
 class LengthPrefixCoder(FastCoder):

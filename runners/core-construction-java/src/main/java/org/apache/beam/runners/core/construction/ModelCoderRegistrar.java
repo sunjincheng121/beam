@@ -34,6 +34,7 @@ import org.apache.beam.sdk.coders.VarLongCoder;
 import org.apache.beam.sdk.transforms.windowing.GlobalWindow;
 import org.apache.beam.sdk.transforms.windowing.IntervalWindow.IntervalWindowCoder;
 import org.apache.beam.sdk.util.WindowedValue.FullWindowedValueCoder;
+import org.apache.beam.sdk.util.WindowedValue.ValueOnlyWindowedValueCoder;
 import org.apache.beam.vendor.guava.v26_0_jre.com.google.common.annotations.VisibleForTesting;
 import org.apache.beam.vendor.guava.v26_0_jre.com.google.common.collect.BiMap;
 import org.apache.beam.vendor.guava.v26_0_jre.com.google.common.collect.ImmutableBiMap;
@@ -59,6 +60,7 @@ public class ModelCoderRegistrar implements CoderTranslatorRegistrar {
           .put(LengthPrefixCoder.class, ModelCoders.LENGTH_PREFIX_CODER_URN)
           .put(GlobalWindow.Coder.class, ModelCoders.GLOBAL_WINDOW_CODER_URN)
           .put(FullWindowedValueCoder.class, ModelCoders.WINDOWED_VALUE_CODER_URN)
+          .put(ValueOnlyWindowedValueCoder.class, ModelCoders.VALUE_ONLY_WINDOWED_VALUE_CODER_URN)
           .put(DoubleCoder.class, ModelCoders.DOUBLE_CODER_URN)
           .build();
 
@@ -78,6 +80,7 @@ public class ModelCoderRegistrar implements CoderTranslatorRegistrar {
           .put(Timer.Coder.class, CoderTranslators.timer())
           .put(LengthPrefixCoder.class, CoderTranslators.lengthPrefix())
           .put(FullWindowedValueCoder.class, CoderTranslators.fullWindowedValue())
+          .put(ValueOnlyWindowedValueCoder.class, CoderTranslators.valueOnlyWindowedValue())
           .put(DoubleCoder.class, CoderTranslators.atomic(DoubleCoder.class))
           .build();
 
